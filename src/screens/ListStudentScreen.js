@@ -22,6 +22,7 @@ const ListStudentScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   const students = useSelector(state => state.students);
+
   console.log('students', students);
 
   const dispatch = useDispatch();
@@ -37,7 +38,7 @@ const ListStudentScreen = () => {
   };
 
   const onRefresh = () => {
-    dispatch(fetchStudents(1));
+    dispatch(fetchStudents(students.nextPage));
     dispatch(clear());
     setRefreshing(false);
   };
@@ -53,18 +54,14 @@ const ListStudentScreen = () => {
     return <View style={styles.loadingView}></View>;
   };
 
-  const GoToStudentDetails = () => {
+  const GoToStudentDetails = studentsData => {
     navigation.navigate('Student Details', {
-      avatar: students.students.avatar,
-      studentName: students.students.name,
-      age: students.students.age,
-      email: students.students.email,
+      studentsData,
     });
-    console.log('Details', students.students[0].id);
   };
 
   const renderStudents = itemData => (
-    <Pressable onPress={GoToStudentDetails}>
+    <Pressable onPress={() => GoToStudentDetails(itemData.item)}>
       <View style={styles.container}>
         <Image source={{uri: itemData.item.avatar}} style={styles.image} />
         <View>
@@ -86,7 +83,7 @@ const ListStudentScreen = () => {
       <FlatList
         data={students.students}
         keyExtractor={item => item.id}
-        renderItem={renderStudents}
+        renderItem={item => renderStudents(item)}
         onEndReachedThreshold={0.2}
         onMomentumScrollBegin={() => {
           setLoadingActive(false);

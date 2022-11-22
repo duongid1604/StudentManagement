@@ -2,7 +2,7 @@ import {StyleSheet, Text, TextInput, View} from 'react-native';
 import React from 'react';
 import {Controller} from 'react-hook-form';
 
-const CustomInput = ({
+const CustomDetailsScreenInput = ({
   control,
   name,
   placeholder,
@@ -19,13 +19,14 @@ const CustomInput = ({
           <View
             style={[styles.container, {borderColor: error ? 'red' : 'black'}]}>
             <TextInput
-              value={value}
+              value={value?.toString()}
               onChangeText={onChange}
               onBlur={onBlur}
               placeholder={placeholder}
               style={styles.input}
               placeholderTextColor="#888"
               keyboardType={keyboardTypeInput}
+              editable
             />
           </View>
 
@@ -38,7 +39,7 @@ const CustomInput = ({
   );
 };
 
-export default CustomInput;
+export default CustomDetailsScreenInput;
 
 const styles = StyleSheet.create({
   container: {

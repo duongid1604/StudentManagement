@@ -1,10 +1,13 @@
+import {useNavigation} from '@react-navigation/native';
 import React, {useEffect, useState} from 'react';
-import {useForm} from 'react-hook-form';
+import {Controller, useForm} from 'react-hook-form';
 import {
+  Alert,
   FlatList,
   Image,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -13,24 +16,26 @@ import {useDispatch, useSelector} from 'react-redux';
 import AddButton from '../components/AddButton';
 import CancelButton from '../components/CancelButton';
 import CustomInput from '../components/CustomInput';
-import {addSubject} from '../redux/studentsSlice';
+import {avatar} from '../constants/avatars';
+import {addStudents, addSubject} from '../redux/studentsSlice';
 import {fetchSubjects} from '../redux/subjectsSlice';
 
 const AddStudentScreen = () => {
-  const {
-    control,
-    handleSubmit,
-    formState: {errors},
-  } = useForm();
+  const {control, handleSubmit} = useForm();
 
-  const [pressedAvatar1, setPressedAvatar1] = useState();
-  const [pressedAvatar2, setPressedAvatar2] = useState();
-  const [pressedAvatar3, setPressedAvatar3] = useState();
+  const [isChosen, setIsChosen] = useState();
 
   const [unregisterVisible, setUnregisterVisible] = useState(false);
   const [registeredVisible, setRegisteredVisible] = useState(false);
 
   const subjects = useSelector(state => state.subjects);
+
+  const [registeredSubject, setRegisteredSubject] = useState([]);
+  const [unregisterSubject, setUnregisterSubject] = useState([]);
+
+  useEffect(() => {
+    setUnregisterSubject(subjects.subjects);
+  }, [subjects]);
 
   const dispatch = useDispatch();
 
@@ -38,41 +43,30 @@ const AddStudentScreen = () => {
     dispatch(fetchSubjects());
   }, [dispatch]);
 
-  const handlePressedAvatar1 = () => {
-    setPressedAvatar1({
-      borderRadius: 220,
-      borderWidth: 3,
-      borderColor: '#2b83f0',
-    });
-    setPressedAvatar2();
-    setPressedAvatar3();
+  const onSubmit = data => {
+    dispatch(
+      addStudents({
+        avatar: data.avatar,
+        studentName: data.studentName,
+        email: data.email,
+        age: data.age,
+      }),
+    );
+    Alert.alert('Done !!!');
   };
-
-  const handlePressedAvatar2 = () => {
-    setPressedAvatar2({
-      borderRadius: 220,
-      borderWidth: 3,
-      borderColor: '#2b83f0',
-    });
-    setPressedAvatar1();
-    setPressedAvatar3();
-  };
-
-  const handlePressedAvatar3 = () => {
-    setPressedAvatar3({
-      borderRadius: 220,
-      borderWidth: 3,
-      borderColor: '#2b83f0',
-    });
-    setPressedAvatar2();
-    setPressedAvatar1();
-  };
-
-  const onSubmit = data => console.log(data);
-
-  const UnregisterPressHandler = () => {};
 
   // Render Unregister Subject
+
+  const UnregisterPressHandler = id => {
+    dispatch(addSubject({id: id}));
+
+    setRegisteredSubject([
+      ...registeredSubject,
+      ...unregisterSubject.filter(item => item.id === id),
+    ]);
+
+    setUnregisterSubject(unregisterSubject.filter(item => item.id !== id));
+  };
 
   const renderSubjects = itemData => (
     <Pressable
@@ -81,141 +75,180 @@ const AddStudentScreen = () => {
           ? [styles.press, styles.subjectContainer]
           : styles.subjectContainer
       }
-      onPress={UnregisterPressHandler}>
+      onPress={() => UnregisterPressHandler(itemData.item.id)}>
       <Text style={styles.text}>{itemData.item.subjectName}</Text>
     </Pressable>
   );
 
   // Render Registered Subject
 
-  const renderRegisteredSubjects = itemData => <View></View>;
+  const RegisteredPressHandler = id => {
+    console.log(id, 'id in Register');
+    setUnregisterSubject([
+      ...unregisterSubject,
+      ...registeredSubject.filter(item => item.id === id),
+    ]);
+
+    setRegisteredSubject(registeredSubject.filter(item => item.id !== id));
+  };
+
+  const renderRegisteredSubjects = itemData => (
+    <Pressable
+      style={({pressed}) =>
+        pressed
+          ? [styles.press, styles.subjectContainer]
+          : styles.subjectContainer
+      }
+      onPress={() => {
+        RegisteredPressHandler(itemData.item.id);
+      }}>
+      <Text style={styles.text}>{itemData.item.subjectName}</Text>
+    </Pressable>
+  );
+
+  const avatarPressedHandler = (id, url, onChange) => {
+    setIsChosen(id);
+    onChange(url);
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
-        <Pressable onPress={handlePressedAvatar1} style={pressedAvatar1}>
-          <Image
-            style={styles.image}
-            source={{
-              uri: 'https://www.pngall.com/wp-content/uploads/12/Avatar-Profile-PNG-Picture.png',
-            }}
+        {avatar.map(data => (
+          <Controller
+            key={data.id}
+            control={control}
+            name="avatar"
+            render={({field: {onChange}}) => (
+              <>
+                <Pressable
+                  onPress={() =>
+                    avatarPressedHandler(data.id, data.url, onChange)
+                  }>
+                  <Image
+                    source={{uri: data.url}}
+                    style={
+                      data.id === isChosen
+                        ? [styles.image, styles.imagePressed]
+                        : styles.image
+                    }
+                  />
+                </Pressable>
+              </>
+            )}
           />
-        </Pressable>
-
-        <Pressable onPress={handlePressedAvatar2} style={pressedAvatar2}>
-          <Image
-            style={styles.image}
-            source={{
-              uri: 'https://www.pngall.com/wp-content/uploads/12/Avatar-Profile-Vector-PNG-Photos.png',
-            }}
-          />
-        </Pressable>
-
-        <Pressable onPress={handlePressedAvatar3} style={pressedAvatar3}>
-          <Image
-            style={styles.image}
-            source={{
-              uri: 'https://www.pngall.com/wp-content/uploads/12/Avatar-Profile-PNG-Pic.png',
-            }}
-          />
-        </Pressable>
+        ))}
       </View>
 
-      <CustomInput
-        name="name"
-        placeholder="Enter student's name..."
-        control={control}
-        rules={{
-          required: "Student's name is required !!!",
-          maxLength: {value: 20, message: 'Name must be maximum 20 character'},
-          pattern: {value: /[A-Za-z]/, message: 'Name must be a string'},
-        }}
-      />
+      <ScrollView>
+        <CustomInput
+          name="studentName"
+          placeholder="Enter student's name..."
+          control={control}
+          rules={{
+            required: "Student's name is required !!!",
+            maxLength: {
+              value: 20,
+              message: 'Name must be maximum 20 character',
+            },
+            pattern: {value: /[A-Za-z]/, message: 'Name must be a string'},
+          }}
+        />
 
-      <CustomInput
-        name="email"
-        placeholder="Enter student's email..."
-        control={control}
-        rules={{
-          required: "Student's email is required !!!",
-          maxLength: {value: 20, message: 'Email must be maximum 20 character'},
-          pattern: {
-            value: /^[A-Z0-9._%+-]+@gmail+\.com/i,
-            message: `Invalid email address !!! ${'\n'}Email must have @gmail.com `,
-          },
-        }}
-      />
+        <CustomInput
+          name="email"
+          placeholder="Enter student's email..."
+          control={control}
+          rules={{
+            required: "Student's email is required !!!",
+            maxLength: {
+              value: 20,
+              message: 'Email must be maximum 20 character',
+            },
+            pattern: {
+              value: /^[A-Z0-9._%+-]+@gmail+\.com/i,
+              message: `Invalid email address !!! ${'\n'}Email must have @gmail.com `,
+            },
+          }}
+        />
 
-      <CustomInput
-        name="age"
-        placeholder="Enter student age..."
-        control={control}
-        rules={{
-          required: "Student's age is required !!!",
-          min: {value: 0, message: 'Age must be from 0 to 99'},
-          max: {value: 99, message: 'Age must be from 0 to 99'},
-          pattern: {value: /[0-9]/, message: 'Age must be a number'},
-        }}
-      />
+        <CustomInput
+          name="age"
+          placeholder="Enter student age..."
+          control={control}
+          keyboardTypeInput="number-pad"
+          rules={{
+            required: "Student's age is required !!!",
+            min: {value: 0, message: 'Age must be from 0 to 99'},
+            max: {value: 99, message: 'Age must be from 0 to 99'},
+            pattern: {value: /[0-9]/, message: 'Age must be a number'},
+          }}
+        />
 
-      {/* Modal Unregister */}
+        {/* Modal Unregister */}
 
-      <View style={styles.modalContainer}>
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={unregisterVisible}
-          onRequestClose={() => {
-            setUnregisterVisible(!unregisterVisible);
-          }}>
-          <View style={styles.modal}>
-            <FlatList
-              data={subjects.subjects}
-              keyExtractor={item => item.id}
-              renderItem={renderSubjects}
-            />
+        <View style={styles.modalContainer}>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={unregisterVisible}
+            onRequestClose={() => {
+              setUnregisterVisible(!unregisterVisible);
+            }}>
+            <View style={styles.modal}>
+              <FlatList
+                data={unregisterSubject}
+                keyExtractor={item => item.id}
+                renderItem={renderSubjects}
+              />
 
-            <CancelButton
-              onPress={() => setUnregisterVisible(!unregisterVisible)}>
-              Cancel
-            </CancelButton>
-          </View>
-        </Modal>
-      </View>
+              <CancelButton
+                onPress={() => setUnregisterVisible(!unregisterVisible)}>
+                Cancel
+              </CancelButton>
+            </View>
+          </Modal>
+        </View>
 
-      {/* Modal Registered */}
+        {/* Modal Registered */}
 
-      <View style={styles.modalContainer}>
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={registeredVisible}
-          onRequestClose={() => {
-            setRegisteredVisible(!registeredVisible);
-          }}>
-          <View style={styles.modal}>
-            <FlatList
-              data={subjects.subjects}
-              keyExtractor={item => item.id}
-              renderItem={renderRegisteredSubjects}
-            />
+        <View style={styles.modalContainer}>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={registeredVisible}
+            onRequestClose={() => {
+              setRegisteredVisible(!registeredVisible);
+            }}>
+            <View style={styles.modal}>
+              <FlatList
+                data={registeredSubject}
+                keyExtractor={item => item.id}
+                renderItem={item => renderRegisteredSubjects(item)}
+              />
 
-            <CancelButton
-              onPress={() => setRegisteredVisible(!registeredVisible)}>
-              Cancel
-            </CancelButton>
-          </View>
-        </Modal>
-      </View>
+              <CancelButton
+                onPress={() => setRegisteredVisible(!registeredVisible)}>
+                Cancel
+              </CancelButton>
+            </View>
+          </Modal>
+        </View>
 
-      <Pressable style={styles.list} onPress={() => setUnregisterVisible(true)}>
-        <Text style={styles.listText}>Unregister subjects</Text>
-      </Pressable>
+        <View style={styles.listContainer}>
+          <Pressable
+            style={styles.list}
+            onPress={() => setUnregisterVisible(true)}>
+            <Text style={styles.listText}>Unregister subjects</Text>
+          </Pressable>
 
-      <Pressable style={styles.list} onPress={() => setRegisteredVisible(true)}>
-        <Text style={styles.listText}>Registered subjects</Text>
-      </Pressable>
-
+          <Pressable
+            style={styles.list}
+            onPress={() => setRegisteredVisible(true)}>
+            <Text style={styles.listText}>Registered subjects</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
       <AddButton onPress={handleSubmit(onSubmit)}>Add</AddButton>
     </View>
   );
@@ -241,17 +274,22 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#2b83f0',
   },
+  listContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   list: {
     height: 50,
     margin: 16,
-    borderWidth: 1,
     borderRadius: 16,
     justifyContent: 'center',
     padding: 10,
+    backgroundColor: '#253ebb',
   },
   listText: {
     fontSize: 16,
-    color: '#888',
+    color: '#fff',
   },
   modalContainer: {
     justifyContent: 'center',

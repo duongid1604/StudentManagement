@@ -9,6 +9,8 @@ import ListSubjectScreen from './src/screens/ListSubjectScreen';
 import store from './src/redux/store';
 import AddStudentScreen from './src/screens/AddStudentScreen';
 import StudentDetails from './src/screens/StudentDetails';
+import SubjectDetails from './src/screens/SubjectDetails';
+import AddSubjectScreen from './src/screens/AddSubjectScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,6 +25,8 @@ const App = () => {
           <Stack.Screen name="List subject" component={ListSubjectScreen} />
           <Stack.Screen name="Add student" component={AddStudentScreen} />
           <Stack.Screen name="Student Details" component={StudentDetails} />
+          <Stack.Screen name="Subject Details" component={SubjectDetails} />
+          <Stack.Screen name="Add subject" component={AddSubjectScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

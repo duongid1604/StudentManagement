@@ -1,49 +1,99 @@
-import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-import RegisteredList from '../components/RegisteredList';
-import UnregisteredList from '../components/UnregisteredList';
+import {useNavigation} from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import {useDispatch, useSelector} from 'react-redux';
+import AddButton from '../components/AddButton';
+import {fetchSubjects} from '../redux/subjectsSlice';
 
-const ListSubjectScreen = () => {
+const ListSubjectStudent = () => {
+  const [refreshing, setRefreshing] = useState(false);
+
+  const subjects = useSelector(state => state.subjects);
+
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    dispatch(fetchSubjects());
+  }, [dispatch]);
+
+  const onRefresh = () => {
+    dispatch(fetchSubjects());
+    setRefreshing(false);
+  };
+
+  const renderBottom = () => {
+    if (subjects.loading) {
+      return (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color="#333" />
+        </View>
+      );
+    }
+    return <View style={styles.loadingView}></View>;
+  };
+
+  const GotoSubjectDetails = subjectData => {
+    navigation.navigate('Subject Details', {
+      subjectData,
+    });
+  };
+
+  const renderSubjects = itemData => (
+    <Pressable onPress={() => GotoSubjectDetails(itemData.item)}>
+      <View style={styles.subjectContainer}>
+        <Text style={styles.text}>Name: {itemData.item.subjectName}</Text>
+        <Text style={styles.text}>Teacher: {itemData.item.teacher}</Text>
+        <Text style={styles.text}>Classroom: {itemData.item.classRoom}</Text>
+      </View>
+    </Pressable>
+  );
+
+  const GotoAddSubjectScreen = () => {
+    navigation.navigate('Add subject');
+  };
+
   return (
     <View style={styles.container}>
-      <View>
-        <Text style={styles.heading}>Registered</Text>
-        <View style={styles.item}>
-          <RegisteredList />
-        </View>
-      </View>
-
-      <View>
-        <Text style={styles.heading}>Unregistered</Text>
-        <View style={styles.item}>
-          <UnregisteredList />
-        </View>
-      </View>
+      <AddButton onPress={GotoAddSubjectScreen}>Add subject</AddButton>
+      <FlatList
+        data={subjects.subjects}
+        keyExtractor={item => item.id}
+        renderItem={item => renderSubjects(item)}
+        ListFooterComponent={renderBottom()}
+        refreshing={refreshing}
+        onRefresh={() => onRefresh()}
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   );
 };
 
-export default ListSubjectScreen;
+export default ListSubjectStudent;
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
+    flex: 1,
   },
-  item: {
-    width: 150,
-    borderWidth: 1,
+  subjectContainer: {
+    marginBottom: 20,
+    marginHorizontal: 16,
+    backgroundColor: '#ccc',
     borderRadius: 16,
     padding: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  heading: {
-    textAlign: 'center',
-    fontSize: 24,
+  text: {
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
+    fontSize: 16,
+    color: '#3c3a48',
+    marginHorizontal: 12,
+    marginVertical: 6,
   },
 });

@@ -1,9 +1,10 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
+import AxiosClient from '../api/axiosClient';
 
 const initialState = {
   loading: false,
   students: [],
-  registerSubject: [],
+  registeredSubject: [],
   error: '',
   nextPage: 1,
 };
@@ -11,12 +12,23 @@ const initialState = {
 export const fetchStudents = createAsyncThunk(
   'students/fetchStudents',
   async (page = 1) => {
-    const response = await fetch(
-      `https://6376f585b5f0e1eb8515e48d.mockapi.io/students/?page=${page}&limit=10`,
-    );
-    const data = await response.json();
-    console.log('fetch');
-    return data;
+    const response = await AxiosClient.get(`students?page=${page}&limit=10`);
+    return response.data;
+  },
+);
+
+export const addStudents = createAsyncThunk(
+  'students/addStudents',
+  async body => {
+    const response = await AxiosClient.post('students', body);
+    return response.data;
+  },
+);
+export const updateStudent = createAsyncThunk(
+  'students/updateStudent',
+  async ([id, body]) => {
+    const response = await AxiosClient.patch(`students/${id}`, body);
+    return response.data;
   },
 );
 
@@ -26,12 +38,16 @@ const studentsSlice = createSlice({
   reducers: {
     clear: state => {
       state.students = [];
+      state.nextPage = 1;
     },
     loadMore: state => {
       state.nextPage += 1;
     },
     addSubject: (state, action) => {
-      state.registerSubject = [...state.registerSubject, ...action.payload];
+      state.registeredSubject = [
+        ...state.registeredSubject,
+        ...action.payload.id,
+      ];
     },
   },
   extraReducers: builder => {
