@@ -1,4 +1,5 @@
 import {useNavigation} from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import React, {useEffect, useState} from 'react';
 import {Controller, useForm} from 'react-hook-form';
 import {
@@ -14,7 +15,6 @@ import {
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import AddButton from '../components/AddButton';
-import CancelButton from '../components/CancelButton';
 import CustomInput from '../components/CustomInput';
 import {avatar} from '../constants/avatars';
 import {addStudents, addSubject} from '../redux/studentsSlice';
@@ -22,6 +22,8 @@ import {fetchSubjects} from '../redux/subjectsSlice';
 
 const AddStudentScreen = () => {
   const {control, handleSubmit} = useForm();
+
+  const navigation = useNavigation();
 
   const [isChosen, setIsChosen] = useState();
 
@@ -50,9 +52,11 @@ const AddStudentScreen = () => {
         studentName: data.studentName,
         email: data.email,
         age: data.age,
+        subjects: registeredSubject,
       }),
     );
     Alert.alert('Done !!!');
+    navigation.goBack();
   };
 
   // Render Unregister Subject
@@ -201,11 +205,6 @@ const AddStudentScreen = () => {
                 keyExtractor={item => item.id}
                 renderItem={renderSubjects}
               />
-
-              <CancelButton
-                onPress={() => setUnregisterVisible(!unregisterVisible)}>
-                Cancel
-              </CancelButton>
             </View>
           </Modal>
         </View>
@@ -226,11 +225,6 @@ const AddStudentScreen = () => {
                 keyExtractor={item => item.id}
                 renderItem={item => renderRegisteredSubjects(item)}
               />
-
-              <CancelButton
-                onPress={() => setRegisteredVisible(!registeredVisible)}>
-                Cancel
-              </CancelButton>
             </View>
           </Modal>
         </View>
@@ -292,9 +286,9 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   modalContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
   },
   modal: {
     alignItems: 'center',

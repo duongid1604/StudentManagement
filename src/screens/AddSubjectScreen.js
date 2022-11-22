@@ -1,3 +1,4 @@
+import {useNavigation} from '@react-navigation/native';
 import React, {useEffect} from 'react';
 import {useForm} from 'react-hook-form';
 import {Alert, ScrollView, StyleSheet, View} from 'react-native';
@@ -8,6 +9,8 @@ import {addSubject, fetchSubjects} from '../redux/subjectsSlice';
 
 const AddSubjectScreen = () => {
   const {control, handleSubmit} = useForm();
+
+  const navigation = useNavigation();
 
   const dispatch = useDispatch();
 
@@ -24,6 +27,7 @@ const AddSubjectScreen = () => {
       }),
     );
     Alert.alert('Done !!!');
+    navigation.goBack();
   };
 
   return (
